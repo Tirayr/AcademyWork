@@ -24,7 +24,7 @@ def parse():
 	s='01/01/2015'  #args.start
 	e='10/05/2020'  #args.end
 	w=[5]       #args.web
-	reg=os.path.join(BASE_DIR,'new_regexList')  #args.regexp
+	reg=os.path.join(BASE_DIR,'regexList')  #args.regexp
 	s=map(int,s.split('/'))
 	e=map(int,e.split('/'))
 # using archive scraper to get the news url

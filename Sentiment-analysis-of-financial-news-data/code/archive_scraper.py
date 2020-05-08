@@ -170,7 +170,52 @@ class Archive_Scraper:
 				print("Collected "+str(len(self.collection.items())))
 				# self.collected()
 				# self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
+	def financial_times(self):
+		start_date=datetime.date(self.sy,self.sm,self.sd)
+		end_date  =datetime.date(self.ey,self.em,self.ed)
+		base_url="https://www.ft.com/search?q={cmpName}&page={page}&dateTo={end_date}&dateFrom={start_date}&concept={concept}&sort=relevance&expandRefinements=true"
 
+
+		for keyword in self.relist:
+			print('For company={}'.format(keyword))
+			cmpName=self.relist[keyword][0]
+			concept=self.relist[keyword][1]
+			url_list=[]
+			for i in range(1,11):
+				url_list.append(base_url.format(cmpName=cmpName,page=i,concept=concept,start_date=start_date,end_date=end_date))
+			for visit_url in url_list:		
+				try:
+					response=requests.get(visit_url)
+					xpath_lv1='//*[@id="site-content"]/div/ul/li'
+					xtree=html.fromstring(response.content)
+					base_xpaths=xtree.xpath(xpath_lv1)
+					for i in range(len(base_url)):
+						try:
+							text_part1   = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_lv1,i)
+							text_part2   = '{}[{}]/div/div/div/div/div/a/span/text()'.format(xpath_lv1,i)
+							text_part3   = '{}[{}]/div/div/div/div/div/a/text()'.format(xpath_lv1,i)
+							pub_time     = '{}[{}]/div/div/div/div/div/time/@datetime'.format(xpath_lv1,i)
+
+							if xtree.xpath(text_part1)!=[]:
+								mytext =xtree.xpath(text_part1)+xtree.xpath(text_part2)
+								pubtime=xtree.xpath(pub_time)
+								print(mytext,pubtime,i,'case1')
+							elif xtree.xpath(text_part3) != []:
+								mytext =xtree.xpath(text_part3)
+								pubtime=xtree.xpath(pub_time)
+								print(mytext,pubtime,i,'case2')
+							else:
+								pass
+						except Exception as e:
+							print('Error:::',e)
+				except Exception as e:
+					print("#"*10,e)
+					logging.error(visit_url)
+					# print("#"*10)
+				finally:
+					# print(self.collected())	
+					print('#########2')
+					# self.writeToFile(self.collection,"econtimesArchive",self.sd,self.sm,self.sy)
 	def econ_times(self):
 		base_url="http://economictimes.indiatimes.com/archivelist/year-{year},month-{month},starttime-{start_t}.cms"
 		start_time=36892
@@ -219,54 +264,7 @@ class Archive_Scraper:
 		finally:
 			print(self.collected())
 		# 	self.writeToFile(self.collection,"econtimesArchive",self.sd,self.sm,self.sy)
-	def financial_times(self):
-		cmpName='Accor'
-		concept='efab7592-0205-4102-87de-363017c3efed'
-		start_date=datetime.date(self.sy,self.sm,self.sd)
-		end_date=datetime.date(self.ey,self.em,self.ed)
-		base_url="https://www.ft.com/search?expandRefinements=true&q={cmpName}+SA&concept={concept}&dateFrom={start_date}&dateTo={end_date}"
-		next_page="https://www.ft.com/search?q={cmpName}%20SA&page={page}dateTo={end_date}dateFrom={start_date}$concept={concept}&sort=relevance&expandRefinements=true"
 
-		#https://www.ft.com/search?expandRefinements=true&q=Total+SA&concept=24f83708-9b7b-4828-9834-503a9ebdc2c1&dateFrom=2020-04-01&dateTo=2020-05-03
-		#https://www.ft.com/search?q=Accor%20SA&page=3&dateTo=2020-05-10&dateFrom=2014-01-01&concept=efab7592-0205-4102-87de-363017c3efed&sort=relevance&expandRefinements=true
-		
-		visit_url=base_url.format(cmpName=cmpName,concept=concept,start_date=start_date,end_date=end_date)
-		try:
-			response=requests.get(visit_url)
-			xpath_lv1='//*[@id="site-content"]/div/ul/li'
-			xtree=html.fromstring(response.content)
-			base_xpaths=xtree.xpath(xpath_lv1)
-			for i in range(len(base_url)):
-				try:
-					text_part1   = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_lv1,i)
-					text_part2   = '{}[{}]/div/div/div/div/div/a/span/text()'.format(xpath_lv1,i)
-					text_part3   = '{}[{}]/div/div/div/div/div/a/text()'.format(xpath_lv1,i)
-					pub_time     = '{}[{}]/div/div/div/div/div/time/@datetime'.format(xpath_lv1,i)
-
-					if xtree.xpath(text_part1)!=[]:
-						mytext =xtree.xpath(text_part1)+xtree.xpath(text_part2)
-						pubtime=xtree.xpath(pub_time)
-						print(mytext,pubtime,i)
-					elif xtree.xpath(text_part3) != []:
-						mytext =xtree.xpath(text_part3)
-						pubtime=xtree.xpath(pub_time)
-						print(mytext,pubtime,i)
-					else:
-						pass
-
-
-				except Exception as e:
-					print('Error:::',e)
-				finally:	
-					print('')
-		except Exception as e:
-			print("#"*10,e)
-			logging.error(visit_url)
-			# print("#"*10)
-		finally:
-			# print(self.collected())	
-			print('')
-			# self.writeToFile(self.collection,"econtimesArchive",self.sd,self.sm,self.sy)
 
 	def thehindu(self):
 		base_url="http://www.thehindu.com/archive/web/{year}/{month}/{day}/"
@@ -438,7 +436,7 @@ class Archive_Scraper:
 			for line in regexFile:
 				try:
 					temp=line.split("::")
-					relist[temp[0]]=temp[1].split("\n")[0]
+					relist[temp[0]]=[temp[1].split("|")[0],temp[1].split("|")[1]]
 					collection[temp[0]]=[]
 				except Exception as e:
 					print(e)
