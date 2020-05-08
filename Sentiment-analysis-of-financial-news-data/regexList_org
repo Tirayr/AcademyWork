@@ -1,0 +1,2 @@
+ACCOR hotel::[\W,_,0-9](bharat.?forge?|bfrg.*)[\W,_,0-9]
+indraprastha gas::[\W,_,0-9](indraprastha[\W,_,0-9]?gas|igl|igas)[\W,_,0-9]
