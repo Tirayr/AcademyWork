@@ -3,6 +3,7 @@ import requests
 import datetime
 import lxml
 import os
+import json
 from os.path import expandvars
 import time
 from lxml import html
@@ -115,31 +116,42 @@ class Archive_Scraper:
 		
 		return s
 	def reuters(self):
-		url="http://www.reuters.com/news/archive/worldNews{year}{month}{date}.html"
-		blacklist=['video','#top']
-		#collection=[]
-		st_d,ed_d=self.sd,self.ed
-		year_month=self.year_m(True)
+		company    = 'OREP.PA'
+		start_date = datetime.datetime(self.sy,self.sm,self.sd).timestamp()*1000000000
+		end_date   = datetime.datetime(self.ey,self.em,self.ed).timestamp()*1000000000
+		base_url   = "https://wireapi.reuters.com/v8/feed/rcom/us/marketnews/ric:{company}?until={timestamp}".format(company=company,timestamp=start_date)
+
+		# #collection=[]
+		# st_d,ed_d=self.sd,self.ed
+		# year_month=self.year_m(True)
+		response  = requests.get(base_url)
+		json_data = json.loads(response.content)
 		try:
-			for year,month in year_month:
-				print("Scraping for the Year " + str(year)," Month " +str(month))
-				if(int(month)!=self.sm or int(year)!=self.sy):
-					st_d=1
-				if(int(month)!=self.em and int(year)!=self.ey):
-					ed_d=31
-				else:
-					ed_d=self.ed
-				for d in range(st_d,ed_d+1):
-					if(d<10):
-						d="0"+str(d)
-					# r=requests.get(url.format(year=year,month=month,date=d))
-					r=requests.get('https://www.reuters.com/companies/ACCP.PA/news')
-					print(r.url)
-					if(r.status_code==200):
-						# print(r.content)
-						b=BeautifulSoup(r.content,'html.parser')
-						links=b.select('body > div > div > div > div > div > div > div > div') #> div > div > div > div > a
-						print(links)
+			for i in json_data['wireitems']:
+				for j in i['templates']:
+					try:
+						print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(i['wireitem_id'])/1000000000)),j['story']['hed'],':::::::',j['story']['lede'])
+					except KeyError as e:
+						print('ddd')
+			# for year,month in year_month:
+			# 	print("Scraping for the Year " + str(year)," Month " +str(month))
+			# 	if(int(month)!=self.sm or int(year)!=self.sy):
+			# 		st_d=1
+			# 	if(int(month)!=self.em and int(year)!=self.ey):
+			# 		ed_d=31
+			# 	else:
+			# 		ed_d=self.ed
+			# 	for d in range(st_d,ed_d+1):
+			# 		if(d<10):
+			# 			d="0"+str(d)
+			# 		# r=requests.get(url.format(year=year,month=month,date=d))
+			# 		r=requests.get('https://www.reuters.com/companies/ACCP.PA/news')
+			# 		print(r.url)
+			# 		if(r.status_code==200):
+			# 			# print(r.content)
+			# 			b=BeautifulSoup(r.content,'html.parser')
+			# 			links=b.select('body > div > div > div > div > div > div > div > div') #> div > div > div > div > a
+			# 			print(links)
 					# 	for link in links:
 					# 		try:
 					# 			if(not ([i for i in blacklist if link.get('href').find(i)!=-1])):
@@ -175,47 +187,47 @@ class Archive_Scraper:
 		end_date  =datetime.date(self.ey,self.em,self.ed)
 		base_url="https://www.ft.com/search?q={cmpName}&page={page}&dateTo={end_date}&dateFrom={start_date}&concept={concept}&sort=relevance&expandRefinements=true"
 
+		try:
+			for keyword in self.relist:
+				print('For company={}'.format(keyword))
+				cmpName=self.relist[keyword][0]
+				concept=self.relist[keyword][1]
+				url_list=[]
+				for i in range(1,11):
+					url_list.append(base_url.format(cmpName=cmpName,page=i,concept=concept,start_date=start_date,end_date=end_date))
+				for visit_url in url_list:		
+					try:
+						response=requests.get(visit_url)
+						xpath_lv1='//*[@id="site-content"]/div/ul/li'
+						xtree=html.fromstring(response.content)
+						base_xpaths=xtree.xpath(xpath_lv1)
+						logging.info("Visitng Url={}".format(visit_url))
+						for i in range(len(base_url)):
+							try:
+								text_part1   = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_lv1,i)
+								text_part2   = '{}[{}]/div/div/div/div/div/a/span/text()'.format(xpath_lv1,i)
+								text_part3   = '{}[{}]/div/div/div/div/div/a/text()'.format(xpath_lv1,i)
+								pub_time     = '{}[{}]/div/div/div/div/div/time/@datetime'.format(xpath_lv1,i)
 
-		for keyword in self.relist:
-			print('For company={}'.format(keyword))
-			cmpName=self.relist[keyword][0]
-			concept=self.relist[keyword][1]
-			url_list=[]
-			for i in range(1,11):
-				url_list.append(base_url.format(cmpName=cmpName,page=i,concept=concept,start_date=start_date,end_date=end_date))
-			for visit_url in url_list:		
-				try:
-					response=requests.get(visit_url)
-					xpath_lv1='//*[@id="site-content"]/div/ul/li'
-					xtree=html.fromstring(response.content)
-					base_xpaths=xtree.xpath(xpath_lv1)
-					for i in range(len(base_url)):
-						try:
-							text_part1   = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_lv1,i)
-							text_part2   = '{}[{}]/div/div/div/div/div/a/span/text()'.format(xpath_lv1,i)
-							text_part3   = '{}[{}]/div/div/div/div/div/a/text()'.format(xpath_lv1,i)
-							pub_time     = '{}[{}]/div/div/div/div/div/time/@datetime'.format(xpath_lv1,i)
-
-							if xtree.xpath(text_part1)!=[]:
-								mytext =xtree.xpath(text_part1)+xtree.xpath(text_part2)
-								pubtime=xtree.xpath(pub_time)
-								print(mytext,pubtime,i,'case1')
-							elif xtree.xpath(text_part3) != []:
-								mytext =xtree.xpath(text_part3)
-								pubtime=xtree.xpath(pub_time)
-								print(mytext,pubtime,i,'case2')
-							else:
-								pass
-						except Exception as e:
-							print('Error:::',e)
-				except Exception as e:
-					print("#"*10,e)
-					logging.error(visit_url)
-					# print("#"*10)
-				finally:
-					# print(self.collected())	
-					print('#########2')
-					# self.writeToFile(self.collection,"econtimesArchive",self.sd,self.sm,self.sy)
+								if xtree.xpath(text_part1)!=[]:
+									mytext =xtree.xpath(text_part1)+xtree.xpath(text_part2)
+									pubtime=xtree.xpath(pub_time)
+									self.collection[keyword].append([pubtime,mytext])
+								elif xtree.xpath(text_part3) != []:
+									mytext =xtree.xpath(text_part3)
+									pubtime=xtree.xpath(pub_time)
+									self.collection[keyword].append([pubtime,mytext])
+								else:
+									pass
+							except Exception as e:
+								print('Error:::',e)
+								logging.error(visit_url)
+					except Exception as e:
+						print("#"*10,e)
+						logging.error(visit_url)
+		finally:
+			print(self.collected())
+			self.writeToFile(self.collection,"FinancialTimes",self.sd,self.sm,self.sy)
 	def econ_times(self):
 		base_url="http://economictimes.indiatimes.com/archivelist/year-{year},month-{month},starttime-{start_t}.cms"
 		start_time=36892
