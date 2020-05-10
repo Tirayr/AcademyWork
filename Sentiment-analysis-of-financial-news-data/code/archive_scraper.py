@@ -116,12 +116,17 @@ class Archive_Scraper:
 		
 		return s
 	def reuters(self):
-		symbol    = 'OREP.PA'
+		for key in self.collection: # Cleaning collector
+			self.collection[key]=[]
+
 		start_timestamp = datetime.datetime(self.sy,self.sm,self.sd).timestamp()*1000000000
 		end_timestamp   = datetime.datetime(self.ey,self.em,self.ed).timestamp()*1000000000
 		try:	
 			for keyword in self.relist:
+
 				print('For company={}'.format(keyword))
+				logging.info('For company={}'.format(keyword))
+
 				symbol        = self.relist[keyword][2]
 				tillDate      = end_timestamp
 				response_code = 200
@@ -143,28 +148,43 @@ class Archive_Scraper:
 								except KeyError as e:
 									pass
 					except KeyError as e:
-						pass
+						logging.warning('Item Search Outputed following:::{}'.format(e))
 					try:
 						tillDate=min(newsDateList)
 					except ValueError as e:
-						pass
+						logging.warning('Last PublishDate found at {}'.format(tillDate))
+		except Exception as e:
+			logging.error('Nothing Found for any of Companies')
 		finally:
-				# print("Collected "+str(len(self.collection.items()))+" urls for "+self.keyword)
-				print("Collected "+str(len(self.collection.items())))
-				print(self.collection.items())
-				# self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
-	def financial_times(self):
-		start_date=datetime.date(self.sy,self.sm,self.sd)
-		end_date  =datetime.date(self.ey,self.em,self.ed)
-		base_url="https://www.ft.com/search?q={cmpName}&page={page}&dateTo={end_date}&dateFrom={start_date}&concept={concept}&sort=relevance&expandRefinements=true"
+				self.collected()
+				self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
 
+	def financial_times(self):
+		for key in self.collection: # Cleaning collector
+			self.collection[key]=[]
+
+		start_date= datetime.date(self.sy,self.sm,self.sd)
+		end_date  = datetime.date(self.ey,self.em,self.ed)
+		base_url  = "https://www.ft.com/search?q={cmpName}&page={page}&dateTo={end_date}&dateFrom={start_date}&concept={concept}&sort=relevance&expandRefinements=true"
 		try:
 			for keyword in self.relist:
+
 				print('For company={}'.format(keyword))
+				logging.info('For company={}'.format(keyword))
+
 				cmpName=self.relist[keyword][0]
 				concept=self.relist[keyword][1]
 				url_list=[]
-				for i in range(1,11):
+
+				#################################Extracting number of pages to look#############################
+				PageNumCheck_resonse= requests.get(base_url.format(cmpName=cmpName,page=1,concept=concept,start_date=start_date,end_date=end_date))
+				PageNumCheck_content= PageNumCheck_resonse.content
+				PageNumCheck_xtree  = html.fromstring(PageNumCheck_content)
+				PageNumCheck_value  = PageNumCheck_xtree.xpath('//*[@id="site-content"]/div/div/div/span/text()[2]')
+				PageCount           = list(map(int, re.findall(r'\d+', str(PageNumCheck_value))))[0]
+				#################################################################################################
+
+				for i in range(PageCount):                   #Creating urls for each page of found news list
 					url_list.append(base_url.format(cmpName=cmpName,page=i,concept=concept,start_date=start_date,end_date=end_date))
 				for visit_url in url_list:		
 					try:
@@ -172,7 +192,7 @@ class Archive_Scraper:
 						xpath_lv1='//*[@id="site-content"]/div/ul/li'
 						xtree=html.fromstring(response.content)
 						base_xpaths=xtree.xpath(xpath_lv1)
-						logging.info("Visitng Url={}".format(visit_url))
+						logging.info("::::::Visitng Url={}".format(visit_url))
 						for i in range(len(base_url)):
 							try:
 								text_part1   = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_lv1,i)
@@ -194,11 +214,13 @@ class Archive_Scraper:
 								print('Error:::',e)
 								logging.error(visit_url)
 					except Exception as e:
-						print("#"*10,e)
+						print('Error:::',e)
 						logging.error(visit_url)
 		finally:
-			print(self.collected())
+			self.collected()
 			self.writeToFile(self.collection,"FinancialTimes",self.sd,self.sm,self.sy)
+			# print(',,,')
+
 	def econ_times(self):
 		base_url="http://economictimes.indiatimes.com/archivelist/year-{year},month-{month},starttime-{start_t}.cms"
 		start_time=36892
