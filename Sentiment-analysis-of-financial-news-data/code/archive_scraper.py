@@ -116,71 +116,42 @@ class Archive_Scraper:
 		
 		return s
 	def reuters(self):
-		company    = 'OREP.PA'
-		start_date = datetime.datetime(self.sy,self.sm,self.sd).timestamp()*1000000000
-		end_date   = datetime.datetime(self.ey,self.em,self.ed).timestamp()*1000000000
-		base_url   = "https://wireapi.reuters.com/v8/feed/rcom/us/marketnews/ric:{company}?until={timestamp}".format(company=company,timestamp=start_date)
-
-		# #collection=[]
-		# st_d,ed_d=self.sd,self.ed
-		# year_month=self.year_m(True)
-		response  = requests.get(base_url)
-		json_data = json.loads(response.content)
-		try:
-			for i in json_data['wireitems']:
-				for j in i['templates']:
+		symbol    = 'OREP.PA'
+		start_timestamp = datetime.datetime(self.sy,self.sm,self.sd).timestamp()*1000000000
+		end_timestamp   = datetime.datetime(self.ey,self.em,self.ed).timestamp()*1000000000
+		try:	
+			for keyword in self.relist:
+				print('For company={}'.format(keyword))
+				symbol        = self.relist[keyword][2]
+				tillDate      = end_timestamp
+				response_code = 200
+				while response_code == 200 and tillDate>start_timestamp:
+					visit_url     = 'https://wireapi.reuters.com/v8/feed/rcom/us/marketnews/ric:{symbol}?until={timestamp}'.format(symbol=symbol,timestamp=int(tillDate))
+					response      = requests.get(visit_url)
+					response_code = response.status_code
+					json_data     = json.loads(response.content)
+					newsDateList  = []
 					try:
-						print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(i['wireitem_id'])/1000000000)),j['story']['hed'],':::::::',j['story']['lede'])
+						for i in json_data['wireitems']:
+							for j in i['templates']:
+								try:
+									pubtime       = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(i['wireitem_id'])/1000000000))
+									head_value    = j['story']['hed']+':::::::'
+									summary_value = j['story']['lede']
+									self.collection[keyword].append([pubtime,head_value+summary_value])
+									newsDateList.append(int(i['wireitem_id']))
+								except KeyError as e:
+									pass
 					except KeyError as e:
-						print('ddd')
-			# for year,month in year_month:
-			# 	print("Scraping for the Year " + str(year)," Month " +str(month))
-			# 	if(int(month)!=self.sm or int(year)!=self.sy):
-			# 		st_d=1
-			# 	if(int(month)!=self.em and int(year)!=self.ey):
-			# 		ed_d=31
-			# 	else:
-			# 		ed_d=self.ed
-			# 	for d in range(st_d,ed_d+1):
-			# 		if(d<10):
-			# 			d="0"+str(d)
-			# 		# r=requests.get(url.format(year=year,month=month,date=d))
-			# 		r=requests.get('https://www.reuters.com/companies/ACCP.PA/news')
-			# 		print(r.url)
-			# 		if(r.status_code==200):
-			# 			# print(r.content)
-			# 			b=BeautifulSoup(r.content,'html.parser')
-			# 			links=b.select('body > div > div > div > div > div > div > div > div') #> div > div > div > div > a
-			# 			print(links)
-					# 	for link in links:
-					# 		try:
-					# 			if(not ([i for i in blacklist if link.get('href').find(i)!=-1])):
-					# 				for keyword in self.relist:
-					# 					if(self.search_key(link.get('href').lower(),self.relist[keyword])):
-					# 						index=link.get('href').rfind('/')
-					# 						linked="http://www.reuters.com/article"+link.get('href')[index:]
-					# 						#print(linked)
-					# 						date_object=datetime.date(int(year),int(month),int(d))
-					# 						date_,month_,year_=date_object.strftime("%d-%b-%Y").split('-')
-					# 						now_d=date_+"-"+month_+"-"+year_
-					# 						# print(now_d,linked)
-					# 						self.collection[keyword].append(now_d+"::"+linked)
-							# except Exception as e:
-							# 	# print("#"*10)
-							# 	logging.warning(str(link))
-							# 	# print("#"*10)
-					# else:
-						# print("#"*10)
-						# logging.error(str(r.url))
-						# print("#"*10)
-		except Exception as e:
-			# print("#"*10)
-			logging.critical(e)
-			# print("#"*10)
+						pass
+					try:
+						tillDate=min(newsDateList)
+					except ValueError as e:
+						pass
 		finally:
 				# print("Collected "+str(len(self.collection.items()))+" urls for "+self.keyword)
 				print("Collected "+str(len(self.collection.items())))
-				# self.collected()
+				print(self.collection.items())
 				# self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
 	def financial_times(self):
 		start_date=datetime.date(self.sy,self.sm,self.sd)
@@ -448,7 +419,7 @@ class Archive_Scraper:
 			for line in regexFile:
 				try:
 					temp=line.split("::")
-					relist[temp[0]]=[temp[1].split("|")[0],temp[1].split("|")[1]]
+					relist[temp[0]]=[temp[1].split("|")[0],temp[1].split("|")[1],temp[1].split("|")[2]]
 					collection[temp[0]]=[]
 				except Exception as e:
 					print(e)
