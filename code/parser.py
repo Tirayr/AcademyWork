@@ -26,8 +26,8 @@ def parse():
 	e=args.end
 	w=args.web
 	reg = args.regexp
-	s=map(int,s.split('/'))
-	e=map(int,e.split('/'))
+	# s=map(int,s.split('/'))
+	# e=map(int,e.split('/'))
 	## using archive scraper to get the news url
 	archive_sc = Archive_Scraper(s,e,reg)
 	for option in w:

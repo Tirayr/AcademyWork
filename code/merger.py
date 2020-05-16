@@ -5,7 +5,7 @@ import datetime
 from difflib import SequenceMatcher
 import logging
  
-BASE_DIR = '$HOME/pythonscripts/Thesis_work/Sentiment-analysis-of-financial-news-data'
+BASE_DIR = '$HOME/pythonscripts/MyPjOne'
 PROGNAME = os.path.basename(__file__)
 
 LOG_TIME = datetime.datetime.now().strftime("%H:%M:%S")

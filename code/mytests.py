@@ -21,8 +21,8 @@ def parse():
 	# parser.add_argument('-r','--regexp',type=str,help="Complete path to the regex list file for companies. \nFor template refer regesList file at root directory of this repo.\n By default, it runs the regexList file present at root directory of this repo.",default=os.path.join(BASE_DIR,'regexList'))
 	# # parser.add_argument('-m','--mode',type=int,help="Which operation to perform.")
 	# args = parser.parse_args()
-	s='01/01/2015'  #args.start
-	e='10/05/2020'  #args.end
+	s='20150101'  #args.start
+	e='20201005'  #args.end
 	w=[1,5]       #args.web
 	reg=os.path.join(BASE_DIR,'regexList')  #args.regexp
 	s=map(int,s.split('/'))

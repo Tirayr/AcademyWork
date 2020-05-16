@@ -13,7 +13,7 @@ import logging
 
 
 
-BASE_DIR = '$HOME/pythonscripts/Thesis_work/Sentiment-analysis-of-financial-news-data'
+BASE_DIR = '$HOME/pythonscripts/MyPjOne'
 PROGNAME = os.path.basename(__file__)
 
 LOG_TIME = datetime.datetime.now().strftime("%H:%M:%S")
@@ -37,9 +37,10 @@ logging.basicConfig(
 
 class Archive_Scraper:
 	def __init__(self,start_dt,end_dt,path):
-
-		self.sd,self.sm,self.sy=start_dt
-		self.ed,self.em,self.ey=end_dt
+		self.startDate=start_dt
+		self.endDate  =end_dt
+		self.sy,self.sm,self.sd=int(start_dt[:4]),int(start_dt[4:6]),int(start_dt[6:8])  #extracting yy,mm,dd from startdate 
+		self.ey,self.em,self.ed=int(end_dt[:4]),int(end_dt[4:6]),int(end_dt[6:8])        #extracting yy,mm,dd from enddate
 		self.relist,self.collection=self.getRegex(path)
 		logging.info('#######STARTING#####::{}'.format(PROGNAME))
 
@@ -162,7 +163,7 @@ class Archive_Scraper:
 			logging.error('{}Nothing Found for any of Companies{}'.format(sep,sep))
 		finally:
 			self.collected()
-			self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
+			self.writeToFile(self.collection,"reutersArchive",self.startDate,self.endDate)
 
 	def financial_times(self):
 		for key in self.collection: # Cleaning collector
@@ -246,7 +247,7 @@ class Archive_Scraper:
 						logging.error(visit_url)
 		finally:
 			self.collected()
-			self.writeToFile(self.collection,"FinancialTimesArchive",self.sd,self.sm,self.sy)
+			self.writeToFile(self.collection,"FinancialTimesArchive",self.startDate,self.endDate)
 
 	def econ_times(self):
 		base_url="http://economictimes.indiatimes.com/archivelist/year-{year},month-{month},starttime-{start_t}.cms"
@@ -434,7 +435,7 @@ class Archive_Scraper:
 			self.collected()
 			self.writeToFile(self.collection,"businessLineArchive",self.sd,self.sm,self.sy)
 #change for others also for write to file definition
-	def writeToFile(self,links,webp,date,month,year):
+	def writeToFile(self,links,webp,startDate,endDate):
 					# self.writeToFile(self.collection,"econtimesArchive",self.sd,self.sm,self.sy)
 	#	BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','data')
 		try:
@@ -449,7 +450,7 @@ class Archive_Scraper:
 			except Exception as e:
 				pass
 			
-			f = open(os.path.join(DATA_DIR,"FinNews",company,"archive","results_"+webp+"_"+company+"_"+str(date)+"_"+str(month)+"_"+str(year)+'.data'),'a+')
+			f = open(os.path.join(DATA_DIR,"FinNews",company,"archive","results_"+webp+"_"+company+"_"+str(self.startDate)+"_"+str(self.endDate)+'.data'),'a+')
 			for i in links[company]:
 				f.write(str(i)+"\n")
 			f.close()
