@@ -116,9 +116,12 @@ class Archive_Scraper:
 		
 		return s
 	def reuters(self):
-		for key in self.collection: # Cleaning collector
+		
+		for key in self.collection:             # Cleaning collector
 			self.collection[key]=[]
-
+		sep       = ':::'
+		
+		logging.info('{}{}{}Scraping from reuters{}{}{}'.format(sep,sep,sep,sep,sep,sep))
 		start_timestamp = datetime.datetime(self.sy,self.sm,self.sd).timestamp()*1000000000
 		end_timestamp   = datetime.datetime(self.ey,self.em,self.ed).timestamp()*1000000000
 		try:	
@@ -130,41 +133,46 @@ class Archive_Scraper:
 				symbol        = self.relist[keyword][2]
 				tillDate      = end_timestamp
 				response_code = 200
+
 				while response_code == 200 and tillDate>start_timestamp:
 					visit_url     = 'https://wireapi.reuters.com/v8/feed/rcom/us/marketnews/ric:{symbol}?until={timestamp}'.format(symbol=symbol,timestamp=int(tillDate))
 					response      = requests.get(visit_url)
 					response_code = response.status_code
 					json_data     = json.loads(response.content)
+					logging.info("{}{}Visitng Url={}".format(sep,sep,visit_url))
 					newsDateList  = []
 					try:
 						for i in json_data['wireitems']:
 							for j in i['templates']:
 								try:
-									pubtime       = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(i['wireitem_id'])/1000000000))
-									head_value    = j['story']['hed']+':::::::'
+									pubtime       = time.strftime('%Y-%m-%d %H:%M:%S%z', time.gmtime(int(i['wireitem_id'])/1000000000))
+									head_value    = j['story']['hed']+sep+sep
 									summary_value = j['story']['lede']
 									self.collection[keyword].append([pubtime,head_value+summary_value])
 									newsDateList.append(int(i['wireitem_id']))
 								except KeyError as e:
 									pass
 					except KeyError as e:
-						logging.warning('Item Search Outputed following:::{}'.format(e))
+						logging.warning('Item Search Outputed KeyError for {}{}'.format(sep,e))
 					try:
 						tillDate=min(newsDateList)
 					except ValueError as e:
-						logging.warning('Last PublishDate found at {}'.format(tillDate))
+						logging.warning('{}Last PublishDate found at {}'.format(sep,tillDate))
 		except Exception as e:
-			logging.error('Nothing Found for any of Companies')
+			logging.error('{}Nothing Found for any of Companies{}'.format(sep,sep))
 		finally:
-				self.collected()
-				self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
+			self.collected()
+			self.writeToFile(self.collection,"reutersArchive",self.sd,self.sm,self.sy)
 
 	def financial_times(self):
 		for key in self.collection: # Cleaning collector
 			self.collection[key]=[]
+		sep       = ':::'
 
+		logging.info('{}{}{}Scraping from reuters{}{}{}'.format(sep,sep,sep,sep,sep,sep))
 		start_date= datetime.date(self.sy,self.sm,self.sd)
 		end_date  = datetime.date(self.ey,self.em,self.ed)
+
 		base_url  = "https://www.ft.com/search?q={cmpName}&page={page}&dateTo={end_date}&dateFrom={start_date}&concept={concept}&sort=relevance&expandRefinements=true"
 		try:
 			for keyword in self.relist:
@@ -174,7 +182,7 @@ class Archive_Scraper:
 
 				cmpName=self.relist[keyword][0]
 				concept=self.relist[keyword][1]
-				url_list=[]
+				page_list=[]
 
 				#################################Extracting number of pages to look#############################
 				PageNumCheck_resonse= requests.get(base_url.format(cmpName=cmpName,page=1,concept=concept,start_date=start_date,end_date=end_date))
@@ -182,32 +190,52 @@ class Archive_Scraper:
 				PageNumCheck_xtree  = html.fromstring(PageNumCheck_content)
 				PageNumCheck_value  = PageNumCheck_xtree.xpath('//*[@id="site-content"]/div/div/div/span/text()[2]')
 				PageCount           = list(map(int, re.findall(r'\d+', str(PageNumCheck_value))))[0]
+				logging.info('{}{} pages found For comany={}'.format(sep,PageCount,keyword))
 				#################################################################################################
 
-				for i in range(PageCount):                   #Creating urls for each page of found news list
-					url_list.append(base_url.format(cmpName=cmpName,page=i,concept=concept,start_date=start_date,end_date=end_date))
-				for visit_url in url_list:		
-					try:
-						response=requests.get(visit_url)
-						xpath_lv1='//*[@id="site-content"]/div/ul/li'
-						xtree=html.fromstring(response.content)
-						base_xpaths=xtree.xpath(xpath_lv1)
-						logging.info("::::::Visitng Url={}".format(visit_url))
-						for i in range(len(base_url)):
-							try:
-								text_part1   = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_lv1,i)
-								text_part2   = '{}[{}]/div/div/div/div/div/a/span/text()'.format(xpath_lv1,i)
-								text_part3   = '{}[{}]/div/div/div/div/div/a/text()'.format(xpath_lv1,i)
-								pub_time     = '{}[{}]/div/div/div/div/div/time/@datetime'.format(xpath_lv1,i)
+				for i in range(1,PageCount+1):                              #Creating urls for each page of found news list
+					page_list.append(base_url.format(cmpName=cmpName,page=i,concept=concept,start_date=start_date,end_date=end_date))
 
-								if xtree.xpath(text_part1)!=[]:
+				for page in page_list:		
+					try:
+						response=requests.get(page)                         
+						xpath_basic='//*[@id="site-content"]/div/ul/li'
+						xtree=html.fromstring(response.content)
+						# base_xpaths=xtree.xpath(xpath_basic)
+						logging.info("{}Visitng Url={}".format(sep,page))
+						for i in range(1,26):                               #maximum 25 elements can be found in each page
+							try:
+								text_part1        = '{}[{}]/div/div/div/div/div/a/span/mark/text()'.format(xpath_basic,i)
+								text_part2        = '{}[{}]/div/div/div/div/div/a/span/text()'.format(xpath_basic,i)
+								text_part3        = '{}[{}]/div/div/div/div/div/a/text()'.format(xpath_basic,i)
+								text_highlight1   = '{}[{}]/div/div/div/div/p/a/span/text()[1]'.format(xpath_basic,i)
+								text_highlight2   = '{}[{}]/div/div/div/div/p/a/span/text()[2]'.format(xpath_basic,i)
+								text_highlight3   = '{}[{}]/div/div/div/div/p/a/text()'.format(xpath_basic,i)
+								pub_time          = '{}[{}]/div/div/div/div/div/time/@datetime'.format(xpath_basic,i)
+								if  xtree.xpath(text_part1)!=[]:
 									mytext =xtree.xpath(text_part1)+xtree.xpath(text_part2)
-									pubtime=xtree.xpath(pub_time)
-									self.collection[keyword].append([pubtime,mytext])
+									pubtime=xtree.xpath(pub_time)[0]
+									highlight=''
+									h1=xtree.xpath(text_highlight1)
+									h2=xtree.xpath(text_highlight2)
+									h3=xtree.xpath(text_highlight3)
+									for i in [h1,h2,h3]:
+										if i != []:
+											highlight=highlight+sep.join(i)
+											highlight=highlight.replace('\t','').replace('\n','')
+									self.collection[keyword].append([pubtime,'{}{}{}'.format(sep.join(mytext),sep,highlight)])
 								elif xtree.xpath(text_part3) != []:
 									mytext =xtree.xpath(text_part3)
-									pubtime=xtree.xpath(pub_time)
-									self.collection[keyword].append([pubtime,mytext])
+									pubtime=xtree.xpath(pub_time)[0]
+									highlight=''
+									h1=xtree.xpath(text_highlight1)
+									h2=xtree.xpath(text_highlight2)
+									h3=xtree.xpath(text_highlight3)
+									for i in [h1,h2,h3]:
+										if i != []:
+											highlight=highlight+sep.join(i)
+											highlight=highlight.replace('\t','').replace('\n','')
+									self.collection[keyword].append([pubtime,'{}{}{}'.format(sep.join(mytext),sep,highlight)])
 								else:
 									pass
 							except Exception as e:
@@ -218,8 +246,7 @@ class Archive_Scraper:
 						logging.error(visit_url)
 		finally:
 			self.collected()
-			self.writeToFile(self.collection,"FinancialTimes",self.sd,self.sm,self.sy)
-			# print(',,,')
+			self.writeToFile(self.collection,"FinancialTimesArchive",self.sd,self.sm,self.sy)
 
 	def econ_times(self):
 		base_url="http://economictimes.indiatimes.com/archivelist/year-{year},month-{month},starttime-{start_t}.cms"
@@ -418,11 +445,11 @@ class Archive_Scraper:
 
 		for company in links:
 			try:
-				os.makedirs(os.path.join(DATA_DIR,"links",company,'archive'))
+				os.makedirs(os.path.join(DATA_DIR,"FinNews",company,'archive'))
 			except Exception as e:
 				pass
 			
-			f = open(os.path.join(DATA_DIR,"links",company,"archive","results_"+webp+"_"+company+"_"+str(date)+"_"+str(month)+"_"+str(year)+'.data'),'a+')
+			f = open(os.path.join(DATA_DIR,"FinNews",company,"archive","results_"+webp+"_"+company+"_"+str(date)+"_"+str(month)+"_"+str(year)+'.data'),'a+')
 			for i in links[company]:
 				f.write(str(i)+"\n")
 			f.close()
@@ -456,4 +483,6 @@ class Archive_Scraper:
 		for i in count:
 			print(i+" Collected -"+str(count[i]))
 		print("Total Urls collected-"+str(total))
+
+
 
