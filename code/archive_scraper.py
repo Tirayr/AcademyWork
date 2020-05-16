@@ -13,17 +13,17 @@ import logging
 
 
 
-BASE_DIR = '$HOME/pythonscripts/MyPjOne'
-PROGNAME = os.path.basename(__file__)
+BASE_DIR  = '$HOME/pythonscripts/MyPjOne'
+PROGNAME  = os.path.basename(__file__)
 
-LOG_TIME = datetime.datetime.now().strftime("%H:%M:%S")
-LOG_DATE = datetime.datetime.now().strftime("%Y%m%d")
-LOG_DIR  = '{}/logs/{}'.format(BASE_DIR,LOG_DATE)
+LOG_TIME  = datetime.datetime.now().strftime("%H:%M:%S")
+LOG_DATE  = datetime.datetime.now().strftime("%Y%m%d")
+LOG_DIR   = '{}/logs/{}'.format(BASE_DIR,LOG_DATE)
 os.makedirs('{}'.format(expandvars(LOG_DIR)),exist_ok = True)
-LOG_FILE = '{}/{}_{}.log'.format(LOG_DIR,PROGNAME,LOG_TIME)
+LOG_FILE  = '{}/{}_{}.log'.format(LOG_DIR,PROGNAME,LOG_TIME)
 
 DATA_DATE = datetime.datetime.now().strftime("%Y%m%d")
-DATA_DIR = expandvars('{}/data/{}'.format(BASE_DIR,DATA_DATE))
+DATA_DIR  = expandvars('{}/data/{}'.format(BASE_DIR,DATA_DATE))
 
 
 logging.basicConfig(
@@ -472,8 +472,7 @@ class Archive_Scraper:
 					relist[temp[0]]=[temp[1].split("|")[0],temp[1].split("|")[1],temp[1].split("|")[2]]
 					collection[temp[0]]=[]
 				except Exception as e:
-					print(e)
-					print(line)
+					print('Error={} occured on the line={}'.format(e,line))
 		return relist,collection
 	def collected(self):
 		count={}
