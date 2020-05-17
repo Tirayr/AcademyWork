@@ -32,10 +32,10 @@ def main():
 	for option in wpage:
 		if(option==0):
 			print("Scraping from reuters")
-			archive_sc.reuters()			
+			# archive_sc.reuters()			
 		elif(option==1):
 			print("Scraping from FinancialTimes")
-			archive_sc.financial_times()
+			# archive_sc.financial_times()
 		elif(option==2):
 			print("Scraping from Economictimes")
 			archive_sc.econ_times()
@@ -51,14 +51,12 @@ def main():
 	## using merger to merge different versions of archive runs and also remove duplicates
 	print("merger")
 	entity_names = archive_sc.collection.keys()
-	# merge = Merger(entity_names)
+	merge = Merger(entity_names)
 
 	# ## running analyser
 	print('analyser')
 	analyzer=SentimentAnalyser(entity_names,start,end)
 
-	## Finding sentiment
-	# 	todo
 
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ os.makedirs('{}'.format(expandvars(LOG_DIR)),exist_ok = True)
 LOG_FILE = '{}/{}_{}.log'.format(LOG_DIR,PROGNAME,LOG_TIME)
 
 DATA_DATE = datetime.datetime.now().strftime("%Y%m%d")
-DATA_DIR = expandvars('{}/data/{}'.format(BASE_DIR,DATA_DATE))
+DATA_DIR = expandvars('{}/data/daily/{}'.format(BASE_DIR,DATA_DATE))
 os.makedirs('{}'.format(expandvars(DATA_DIR)),exist_ok = True)
 
 class Merger(object):

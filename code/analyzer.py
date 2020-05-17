@@ -23,7 +23,7 @@ os.makedirs('{}'.format(expandvars(LOG_DIR)),exist_ok = True)
 LOG_FILE  = '{}/{}_{}.log'.format(LOG_DIR,PROGNAME,LOG_TIME)
 
 DATA_DATE = datetime.datetime.now().strftime("%Y%m%d")
-DATA_DIR  = expandvars('{}/data/{}'.format(BASE_DIR,DATA_DATE))
+DATA_DIR  = expandvars('{}/data/daily/{}'.format(BASE_DIR,DATA_DATE))
 MODEL_DIR = expandvars('{}/models/classifier_model/finbert-sentiment'.format(BASE_DIR))
 
 logging.basicConfig(
@@ -80,12 +80,6 @@ class SentimentAnalyser(object):
 						except Exception as e:
 							print('Exception was trown while reading {}:::{}'.format(file,e))
 							logging.error('Exception was trown while reading {}:::{}'.format(file,e))
-
-					else:
-						print('No Matched file found for company={}'.format(keyword))
-						logging.warrning('No Matched file found for company={}'.format(keyword))
-
-
 		except Exception as e:
 			print('Exception was trown::{}'.format(e))
 			logging.error('Exception was trown::{}'.format(e))
