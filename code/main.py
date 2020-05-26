@@ -1,7 +1,8 @@
 import json
 import argparse
 import os
-from archive_scraper import *
+from os.path import expandvars
+from scraper         import *
 from merger          import *
 from analyzer        import *
 
@@ -18,7 +19,7 @@ def main():
 	parser.add_argument('-r','--regexp',type=str,help="Complete path to the regex list file for companies.\n \
 		                  For template refer regesList file at root directory of this repo.\n \
 		                  By default,it runs the regexList file present at root directory of this repo."
-		                  ,default=os.path.join(BASE_DIR,'regexList'))
+		                  ,default=expandvars('{}/regexList'.format(BASE_DIR)))
 	# parser.add_argument('-m','--mode',type=int,help="Which operation to perform.")
 
 	args  = parser.parse_args()
@@ -32,10 +33,10 @@ def main():
 	for option in wpage:
 		if(option==0):
 			print("Scraping from reuters")
-			# archive_sc.reuters()			
+			archive_sc.reuters()			
 		elif(option==1):
 			print("Scraping from FinancialTimes")
-			# archive_sc.financial_times()
+			archive_sc.financial_times()
 		elif(option==2):
 			print("Scraping from Economictimes")
 			archive_sc.econ_times()
