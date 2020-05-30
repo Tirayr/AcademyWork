@@ -13,7 +13,7 @@ import logging
 
 
 
-BASE_DIR  = '$HOME/pythonscripts/MyPjOne'
+BASE_DIR  = '$HOME/GitProjects/AcademyWork'
 PROGNAME  = os.path.basename(__file__)
 
 LOG_TIME  = datetime.datetime.now().strftime("%H:%M:%S")
