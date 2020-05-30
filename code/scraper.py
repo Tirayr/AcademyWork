@@ -37,13 +37,27 @@ logging.basicConfig(
 '''
 
 class Archive_Scraper:
-	def __init__(self,start_dt,end_dt,path):
+	def __init__(self,start_dt,end_dt,path,wpage):
 		self.startDate=start_dt
 		self.endDate  =end_dt
 		self.sy,self.sm,self.sd=int(start_dt[:4]),int(start_dt[4:6]),int(start_dt[6:8])  #extracting yy,mm,dd from startdate 
 		self.ey,self.em,self.ed=int(end_dt[:4]),int(end_dt[4:6]),int(end_dt[6:8])        #extracting yy,mm,dd from enddate
 		self.relist,self.collection=self.getRegex(path)
 		logging.info('#######STARTING#####::{}'.format(PROGNAME))
+
+		for option in wpage:
+			if(option==0):
+				self.reuters()			
+			elif(option==1):
+				self.financial_times()
+			elif(option==2):
+				self.econ_times()
+			elif(option==3):
+				self.ndtv()			
+			elif(option==4):
+				self.businessLine()
+			elif(option==5):		
+				self.thehindu()
 
 	def generate_ym_pair(self,y,sm,em,need_zero):
 		year_mon=[]
@@ -484,6 +498,21 @@ class Archive_Scraper:
 		for i in count:
 			print(i+" Collected -"+str(count[i]))
 		print("Total Urls collected-"+str(total))
+
+	# def run(self,wpage):
+	# 	for option in wpage:
+	# 		if(option==0):
+	# 			reuters()			
+	# 		elif(option==1):
+	# 			financial_times()
+	# 		elif(option==2):
+	# 			econ_times()
+	# 		elif(option==3):
+	# 			ndtv()			
+	# 		elif(option==4):
+	# 			businessLine()
+	# 		elif(option==5):		
+	# 			thehindu()
 
 
 

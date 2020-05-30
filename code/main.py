@@ -43,20 +43,7 @@ def main():
 
 	if runStatusList["scrp"]=="Y":
 		print("Scraper")
-		archive_sc = Archive_Scraper(start,end,reg)
-		for option in wpage:
-			if(option==0):
-				archive_sc.reuters()			
-			elif(option==1):
-				archive_sc.financial_times()
-			elif(option==2):
-				archive_sc.econ_times()
-			elif(option==3):
-				archive_sc.ndtv()			
-			elif(option==4):
-				archive_sc.businessLine()
-			elif(option==5):		
-				archive_sc.thehindu()
+		archive_sc = Archive_Scraper(start,end,reg,wpage)
 
 	if runStatusList["merg"]=="Y":
 		print("Merger")
@@ -66,7 +53,6 @@ def main():
 	if runStatusList["anlz"]=="Y":
 		print('Analyser')
 		analyzer=SentimentAnalyser(entity_names,start,end)
-
 
 
 if __name__ == '__main__':
